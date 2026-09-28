@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://www.stuba.sk/sipvs/palubny-listok"
+xmlns="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
+    <xsd:element name="palubneListky" type="palubneListkyType"/>
+
+    <xsd:simpleType name="pnrType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value ="[A-Z0-9]{6}"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="cisloLetuType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value ="[A-Z0-9]{2}\d{1,4}"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="kodLetiskaType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value ="[A-Z]{3}"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="gateType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value ="[A-Z]\d{1,2}"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="sedadloType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value ="\d{1,2}[A-K]"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="triedaType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="economy"/>
+            <xsd:enumeration value="business"/>
+            <xsd:enumeration value="first"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="titulType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="MR"/>
+            <xsd:enumeration value="MRS"/>
+            <xsd:enumeration value="MS"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="batozinaKgType">
+        <xsd:restriction base="xsd:decimal">
+            <xsd:minInclusive value="0"/>
+            <xsd:maxInclusive value="32"/>
+            <xsd:fractionDigits value="1"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="miestoType">
+        <xsd:sequence>
+            <xsd:element name="letisko" type="kodLetiskaType"/>
+            <xsd:element name="mesto" type="xsd:string"/>
+            <xsd:element name="cas" type="xsd:dateTime"/>
+            <xsd:element name="terminal" type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+</xsd:schema>
