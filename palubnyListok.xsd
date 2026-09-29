@@ -1,7 +1,20 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://www.stuba.sk/sipvs/palubny-listok"
-xmlns="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
-    <xsd:element name="palubneListky" type="palubneListkyType"/>
+xmlns="http://www.stuba.sk/sipvs/palubny-listok"
+xmlns:pl="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
+    <xsd:element name="palubneListky" type="palubneListkyType">
+        <xsd:unique name="unikatneSedadlo">
+            <xsd:selector xpath="pl:pasazieri/pl:pasazier"/>
+            <xsd:field xpath="pl:sedadlo"/>
+        </xsd:unique>
+    </xsd:element>
+
+    <xsd:simpleType name="textType">
+        <xsd:restriction base="xsd:string">
+            <xsd:minLength value="1"/>
+            <xsd:maxLength value="50"/>
+        </xsd:restriction>
+    </xsd:simpleType>
 
     <xsd:simpleType name="pnrType">
         <xsd:restriction base="xsd:string">
@@ -11,7 +24,7 @@ xmlns="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
 
     <xsd:simpleType name="cisloLetuType">
         <xsd:restriction base="xsd:string">
-            <xsd:pattern value ="[A-Z0-9]{2}\d{1,4}"/>
+            <xsd:pattern value ="[A-Z0-9]{2}[0-9]{1,4}"/>
         </xsd:restriction>
     </xsd:simpleType>
 
@@ -23,13 +36,13 @@ xmlns="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
 
     <xsd:simpleType name="gateType">
         <xsd:restriction base="xsd:string">
-            <xsd:pattern value ="[A-Z]\d{1,2}"/>
+            <xsd:pattern value ="[A-Z][0-9]{1,2}"/>
         </xsd:restriction>
     </xsd:simpleType>
 
     <xsd:simpleType name="sedadloType">
         <xsd:restriction base="xsd:string">
-            <xsd:pattern value ="\d{1,2}[A-K]"/>
+            <xsd:pattern value ="[0-9]{1,2}[A-K]"/>
         </xsd:restriction>
     </xsd:simpleType>
 
@@ -60,7 +73,7 @@ xmlns="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
     <xsd:complexType name="miestoType">
         <xsd:sequence>
             <xsd:element name="letisko" type="kodLetiskaType"/>
-            <xsd:element name="mesto" type="xsd:string"/>
+            <xsd:element name="mesto" type="textType"/>
             <xsd:element name="cas" type="xsd:dateTime"/>
             <xsd:element name="terminal" type="xsd:string" minOccurs="0"/>
         </xsd:sequence>
@@ -69,7 +82,7 @@ xmlns="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
     <xsd:complexType name="letType">
         <xsd:sequence>
             <xsd:element name="cisloLetu" type="cisloLetuType"/>
-            <xsd:element name="dopravca" type="xsd:string"/>
+            <xsd:element name="dopravca" type="textType"/>
             <xsd:element name="odlet" type="miestoType"/>
             <xsd:element name="prilet" type="miestoType"/>
             <xsd:element name="dlzkaLetu" type="xsd:duration"/>
@@ -81,8 +94,8 @@ xmlns="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
     <xsd:complexType name="pasazierType">
         <xsd:sequence>
             <xsd:element name="titul" type="titulType"/>
-            <xsd:element name="meno" type="xsd:string"/>
-            <xsd:element name="priezvisko" type="xsd:string"/>
+            <xsd:element name="meno" type="textType"/>
+            <xsd:element name="priezvisko" type="textType"/>
             <xsd:element name="datumNarodenia" type="xsd:date"/>
             <xsd:element name="sedadlo" type="sedadloType"/>
             <xsd:element name="batozinaKg" type="batozinaKgType"/>

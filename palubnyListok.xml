@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="palubnyListok.xsl"?>
+<palubneListky xmlns="http://www.stuba.sk/sipvs/palubny-listok" rezervacia="X7K2QB">
+    <let>
+        <cisloLetu>OS451</cisloLetu>
+        <dopravca>Austrian Airlines</dopravca>
+        <odlet>
+            <letisko>VIE</letisko>
+            <mesto>Viedeň</mesto>
+            <cas>2026-10-15T14:30:00+02:00</cas>
+            <terminal>3</terminal>
+        </odlet>
+        <prilet>
+            <letisko>LHR</letisko>
+            <mesto>Londýn</mesto>
+            <cas>2026-10-15T16:05:00+01:00</cas>
+            <terminal>2</terminal>
+        </prilet>
+        <dlzkaLetu>PT2H35M</dlzkaLetu>
+        <gate>F24</gate>
+        <nastup>13:50:00</nastup>
+    </let>
+    <pasazieri>
+        <pasazier trieda="business">
+            <titul>MR</titul>
+            <meno>Ján</meno>
+            <priezvisko>Kováč</priezvisko>
+            <datumNarodenia>1985-03-22</datumNarodenia>
+            <sedadlo>2A</sedadlo>
+            <batozinaKg>28</batozinaKg>
+            <prednostnyNastup>true</prednostnyNastup>
+        </pasazier>
+        <pasazier trieda="economy">
+            <titul>MS</titul>
+            <meno>Petra</meno>
+            <priezvisko>Horváthová</priezvisko>
+            <datumNarodenia>2002-05-14</datumNarodenia>
+            <sedadlo>14C</sedadlo>
+            <batozinaKg>23.5</batozinaKg>
+            <prednostnyNastup>false</prednostnyNastup>
+        </pasazier>
+        <pasazier trieda="economy">
+            <titul>MRS</titul>
+            <meno>Mária</meno>
+            <priezvisko>Kováčová</priezvisko>
+            <datumNarodenia>1987-11-03</datumNarodenia>
+            <sedadlo>14D</sedadlo>
+            <batozinaKg>0</batozinaKg>
+            <prednostnyNastup>false</prednostnyNastup>
+        </pasazier>
+    </pasazieri>
+</palubneListky>

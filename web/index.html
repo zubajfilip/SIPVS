@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Palubný lístok – formulár</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+    <div>
+        <h1>Palubný lístok</h1>
+        <p>Vyplňte rezerváciu, uložte ju ako XML, overte voči XSD a vytvorte palubné lístky.</p>
+    </div>
+    <button type="button" class="link" id="fillSample">Vyplniť vzorové údaje</button>
+</header>
+
+<!-- input names match the XML element names from palubnyListok.xsd -->
+<form id="form" novalidate autocomplete="off">
+    <!-- ===================== Booking and flight ===================== -->
+    <section class="card">
+        <h2>Rezervácia a let</h2>
+        <div class="grid">
+            <label class="field">
+                <span>Kód rezervácie (PNR)</span>
+                <span class="with-button">
+                    <input name="rezervacia" required pattern="[A-Z0-9]{6}" maxlength="6" class="uppercase code" placeholder="X7K2QB">
+                    <button type="button" class="small" id="generatePnr" title="Vygenerovať náhodný kód">Generovať</button>
+                </span>
+                <small>6 znakov A–Z, 0–9</small>
+            </label>
+            <label class="field">
+                <span>Číslo letu</span>
+                <input name="cisloLetu" required pattern="[A-Z0-9]{2}[0-9]{1,4}" maxlength="6" class="uppercase code" placeholder="OS451">
+                <small>kód dopravcu + 1–4 číslice</small>
+            </label>
+            <label class="field wide">
+                <span>Dopravca</span>
+                <input name="dopravca" required maxlength="50" placeholder="Austrian Airlines">
+                <small>doplní sa podľa čísla letu</small>
+            </label>
+        </div>
+    </section>
+
+    <!-- ===================== Departure / arrival ===================== -->
+    <div class="two-columns">
+        <section class="card">
+            <h2>Odlet</h2>
+            <div class="grid">
+                <label class="field">
+                    <span>Letisko (IATA)</span>
+                    <input name="odlet.letisko" required pattern="[A-Z]{3}" maxlength="3" class="uppercase code" list="airports" placeholder="VIE">
+                </label>
+                <label class="field">
+                    <span>Mesto</span>
+                    <input name="odlet.mesto" required maxlength="50">
+                </label>
+                <label class="field">
+                    <span>Dátum a čas (miestny)</span>
+                    <input name="odlet.cas" type="datetime-local" required>
+                </label>
+                <label class="field">
+                    <span>Časové pásmo</span>
+                    <select name="odlet.offset" class="timezone"></select>
+                </label>
+                <label class="field">
+                    <span>Terminál <em>nepovinné</em></span>
+                    <input name="odlet.terminal" maxlength="10">
+                </label>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Prílet</h2>
+            <div class="grid">
+                <label class="field">
+                    <span>Letisko (IATA)</span>
+                    <input name="prilet.letisko" required pattern="[A-Z]{3}" maxlength="3" class="uppercase code" list="airports" placeholder="LHR">
+                </label>
+                <label class="field">
+                    <span>Mesto</span>
+                    <input name="prilet.mesto" required maxlength="50">
+                </label>
+                <label class="field">
+                    <span>Dátum a čas (miestny)</span>
+                    <input name="prilet.cas" type="datetime-local" required>
+                </label>
+                <label class="field">
+                    <span>Časové pásmo</span>
+                    <select name="prilet.offset" class="timezone"></select>
+                </label>
+                <label class="field">
+                    <span>Terminál <em>nepovinné</em></span>
+                    <input name="prilet.terminal" maxlength="10">
+                </label>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===================== Boarding ===================== -->
+    <section class="card">
+        <h2>Nástup</h2>
+        <div class="grid">
+            <label class="field">
+                <span>Dĺžka letu</span>
+                <output id="flightDuration" class="computed">—</output>
+                <small>vypočíta sa z odletu a príletu</small>
+            </label>
+            <label class="field">
+                <span>Brána</span>
+                <input name="gate" required pattern="[A-Z][0-9]{1,2}" maxlength="3" class="uppercase code" placeholder="F24">
+                <small>písmeno + 1–2 číslice</small>
+            </label>
+            <label class="field">
+                <span>Začiatok nástupu</span>
+                <input name="nastup" type="time" required>
+                <small>predvyplní sa 40 min pred odletom</small>
+            </label>
+        </div>
+    </section>
+
+    <!-- ===================== Passengers ===================== -->
+    <section class="card">
+        <div class="section-header">
+            <h2>Pasažieri <span id="passengerCount" class="count">1 / 9</span></h2>
+            <button type="button" id="addPassenger" class="small">+ Pridať pasažiera</button>
+        </div>
+        <div id="passengers"></div>
+    </section>
+</form>
+
+<template id="passengerTemplate">
+    <fieldset class="passenger">
+        <legend>Pasažier <span class="number"></span></legend>
+        <button type="button" class="remove" title="Odstrániť pasažiera">Odstrániť</button>
+        <div class="grid">
+            <label class="field narrow">
+                <span>Titul</span>
+                <select data-field="titul" required>
+                    <option value="MR">MR</option>
+                    <option value="MRS">MRS</option>
+                    <option value="MS">MS</option>
+                </select>
+            </label>
+            <label class="field">
+                <span>Meno</span>
+                <input data-field="meno" required maxlength="50">
+            </label>
+            <label class="field">
+                <span>Priezvisko</span>
+                <input data-field="priezvisko" required maxlength="50">
+            </label>
+            <label class="field">
+                <span>Dátum narodenia</span>
+                <input data-field="datumNarodenia" type="date" required>
+            </label>
+            <label class="field">
+                <span>Trieda</span>
+                <select data-field="trieda" required>
+                    <option value="economy">Economy</option>
+                    <option value="business">Business</option>
+                    <option value="first">First</option>
+                </select>
+            </label>
+            <label class="field narrow">
+                <span>Sedadlo</span>
+                <input data-field="sedadlo" required pattern="[0-9]{1,2}[A-K]" maxlength="3" class="uppercase code" placeholder="14C">
+            </label>
+            <label class="field narrow">
+                <span>Batožina (kg)</span>
+                <input data-field="batozinaKg" type="number" required min="0" max="32" step="0.1" value="0">
+            </label>
+            <label class="field checkbox">
+                <input data-field="prednostnyNastup" type="checkbox">
+                <span>Prednostný nástup</span>
+            </label>
+        </div>
+    </fieldset>
+</template>
+
+<datalist id="airports"></datalist>
+
+<!-- ===================== Actions and result ===================== -->
+<div class="actions">
+    <div class="actions-inner">
+        <span id="status" class="status">XML ešte nebolo uložené</span>
+        <div class="buttons">
+            <button type="button" id="save">Ulož XML</button>
+            <button type="button" id="validate">Over XML voči XSD</button>
+            <button type="button" id="transform">Transformuj XML do HTML</button>
+        </div>
+    </div>
+</div>
+
+<section id="result" class="result" hidden>
+    <div id="message" class="message"></div>
+    <div id="errors"></div>
+    <pre id="xmlPreview" class="xml" hidden></pre>
+    <iframe id="htmlPreview" class="html-preview" title="Náhľad palubných lístkov" hidden></iframe>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
