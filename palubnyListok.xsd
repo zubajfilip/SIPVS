@@ -66,5 +66,43 @@ xmlns="http://www.stuba.sk/sipvs/palubny-listok" elementFormDefault="qualified">
         </xsd:sequence>
     </xsd:complexType>
 
+    <xsd:complexType name="letType">
+        <xsd:sequence>
+            <xsd:element name="cisloLetu" type="cisloLetuType"/>
+            <xsd:element name="dopravca" type="xsd:string"/>
+            <xsd:element name="odlet" type="miestoType"/>
+            <xsd:element name="prilet" type="miestoType"/>
+            <xsd:element name="dlzkaLetu" type="xsd:duration"/>
+            <xsd:element name="gate" type="gateType"/>
+            <xsd:element name="nastup" type="xsd:time"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="pasazierType">
+        <xsd:sequence>
+            <xsd:element name="titul" type="titulType"/>
+            <xsd:element name="meno" type="xsd:string"/>
+            <xsd:element name="priezvisko" type="xsd:string"/>
+            <xsd:element name="datumNarodenia" type="xsd:date"/>
+            <xsd:element name="sedadlo" type="sedadloType"/>
+            <xsd:element name="batozinaKg" type="batozinaKgType"/>
+            <xsd:element name="prednostnyNastup" type="xsd:boolean"/>
+        </xsd:sequence>
+        <xsd:attribute name="trieda" type="triedaType" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="pasazieriType">
+        <xsd:sequence>
+            <xsd:element name="pasazier" type="pasazierType" minOccurs="1" maxOccurs="9"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="palubneListkyType">
+        <xsd:sequence>
+            <xsd:element name="let" type="letType"/>
+            <xsd:element name="pasazieri" type="pasazieriType"/>
+        </xsd:sequence>
+        <xsd:attribute name="rezervacia" type="pnrType" use="required"/>
+    </xsd:complexType>
 
 </xsd:schema>
