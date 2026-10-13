@@ -418,7 +418,7 @@ $('#sign').addEventListener('click', async () => {
 
         // 3. Pridať XMLDataContainer (vloží do podpisu XML + XSD + XSLT)
         await dBridgeCall(dSig, 'addXmlObject',
-            "xml-01", "Palubný lístok (XML)",
+            "xml-01", "Palubný lístok (XML data cont.)",
             "http://data.gov.sk/def/container/xmldatacontainer+xml/1.1",
             res.xml, "XML_Formular", "1.0",
             //URI format
@@ -449,10 +449,12 @@ $('#sign').addEventListener('click', async () => {
         showMessage('Dokument bol úspešne podpísaný a stiahnutý ako <code>palubnyListok.asice</code>.', 'success');
 
     } catch (e) {
-        if (e.message === "ZRUŠENÉ") {
+        // zachytenie error message do stringu
+        const errorText = (e && e.message) ? e.message : String(e);
+        if (errorText.includes('Chyba 1') || errorText.includes('ZRUŠENÉ') || errorText.includes('zrušené') || errorText.trim() === '1') {
             showMessage('Podpisovanie bolo zrušené používateľom.', 'failure');
         } else {
-            showMessage('Podpisovanie zlyhalo: ' + escapeHtml(e.message), 'failure');
+            showMessage('Podpisovanie zlyhalo: ' + escapeHtml(errorText), 'failure');
         }
     }
     $('#result').scrollIntoView({ behavior: 'smooth' });

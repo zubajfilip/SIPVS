@@ -78,20 +78,21 @@ public class App {
         }));
 
         server.createContext("/api/sign", api(form -> {
-            // Načítanie súborov z disku
+            // load files to sign
             String xml = Files.readString(XML.getXmlFile(), StandardCharsets.UTF_8);
             String xsd = Files.readString(ROOT.resolve("palubnyListok.xsd"), StandardCharsets.UTF_8);
             String xsl = Files.readString(ROOT.resolve("palubnyListok.xsl"), StandardCharsets.UTF_8);
 
-            // Aby sme splnili požiadavku "podpísať objekt PDF" a nemuseli generovať reálne PDF na backende, 
-            // vložíme statický, validný prázdny PDF súbor v Base64 formáte.
-            String dummyPdfB64 = "JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nDPQM1Qo5ypUMFAwALJMLU31jBQsTAz1LBSKUrnCtRTyuQIVDA0UzFVcclMh4gDbcwmuCmVuZHN0cmVhbQplbmRvYmoKMyAwIG9iago0MgplbmRvYmoKMSAwIG9iago8PC9QYWdlcyA0IDAgUi9UeXBlL0NhdGFsb2c+PgplbmRvYmoKNCAwIG9iago8PC9Db3VudCAxL0tpZHNbNSAwIFJdL1R5cGUvUGFnZXM+PgplbmRvYmoKNSAwIG9iago8PC9Db250ZW50cyAyIDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vUGFyZW50IDQgMCBSL1Jlc291cmNlczw8L0ZvbnQ8PC9GMSA2IDAgUj4+Pj4vVHlwZS9QYWdlPj4KZW5kb2JqCjYgMCBvYmoKPDwvQmFzZUZvbnQvSGVsdmV0aWNhL0VuY29kaW5nL1dpbkFuc2lFbmNvZGluZy9TdWJ0eXBlL1R5cGUxL1R5cGUvRm9udD4+CmVuZG9iago3IDAgb2JqCjw8L0F1dGhvcihEaXRlYykvQ3JlYXRvcihEaXRlYykvUHJvZHVjZXIoRGl0ZWMpL1RpdGxlKER1bW15KT4+CmVuZG9iagp4cmVmCjAgOAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAxMjIgMDAwMDAgbiAKMDAwMDAwMDAxOSAwMDAwMCBuIAowMDAwMDAwMTAzIDAwMDAwIG4gCjAwMDAwMDAxNjkgMDAwMDAgbiAKMDAwMDAwMDIyOCAwMDAwMCBuIAowMDAwMDAwMzM1IDAwMDAwIG4gCjAwMDAwMDA0MjMgMDAwMDAgbiAKdHJhaWxlcgo8PC9JbmZvIDcgMCBSL1Jvb3QgMSAwIFIvU2l6ZSA4Pj4Kc3RhcnR4cmVmCjUyMwolJUVPRgo=";
+            // Načítanie vygenerovaného PDF súboru
+            Path pdfPath = OUTPUT_DIR.resolve("palubnyListok.pdf");
+            byte[] pdfBytes = Files.readAllBytes(pdfPath);
+            String pdfBase64 = java.util.Base64.getEncoder().encodeToString(pdfBytes);
 
             return Map.of(
                 "xml", xml,
                 "xsd", xsd,
                 "xsl", xsl,
-                "pdfBase64", dummyPdfB64
+                "pdfBase64", pdfBase64
             );
         }));
 
@@ -101,7 +102,7 @@ public class App {
 
     // ===================== API =====================
 
-    private static HttpHandler api(ApiAction action) {
+    /*private static HttpHandler api(ApiAction action) {
         return exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) {
                 send(exchange, 405, "text/plain; charset=utf-8", "Use POST");
@@ -119,7 +120,27 @@ public class App {
                         Json.write(Map.of("ok", false, "error", message)));
             }
         };
+    }*/
+   private static HttpHandler api(ApiAction action) {
+        return exchange -> {
+            if (!"POST".equals(exchange.getRequestMethod())) {
+                send(exchange, 405, "text/plain; charset=utf-8", "Use POST");
+                return;
+            }
+            try {
+                String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+                Map<String, Object> result = new LinkedHashMap<>(action.execute(parseForm(body)));
+                result.put("ok", true);
+                send(exchange, 200, "application/json; charset=utf-8", Json.write(result));
+            } catch (Throwable e) { // <-- Zmena z Exception na Throwable
+                e.printStackTrace();
+                String message = e.getMessage() != null ? e.getMessage() : e.toString();
+                send(exchange, 200, "application/json; charset=utf-8",
+                        Json.write(Map.of("ok", false, "error", message)));
+            }
+        };
     }
+   
 
     private static Map<String, String> parseForm(String body) {
         Map<String, String> form = new LinkedHashMap<>();

@@ -4,151 +4,138 @@
     xmlns:pl="http://www.stuba.sk/sipvs/palubny-listok"
     exclude-result-prefixes="pl">
 
-    <xsl:output method="html" encoding="UTF-8" indent="yes" doctype-system="about:legacy-compat"/>
+    <xsl:output method="xml" encoding="UTF-8" indent="yes" omit-xml-declaration="yes"/>
 
-    <!-- Alphabets for upper-casing and stripping diacritics (XSLT 1.0 has no upper-case()) -->
     <xsl:variable name="lowercase" select="'aáäbcčdďeéfghiíjklĺľmnňoóôpqrŕsštťuúvwxyýzž'"/>
     <xsl:variable name="uppercase" select="'AÁÄBCČDĎEÉFGHIÍJKLĹĽMNŇOÓÔPQRŔSŠTŤUÚVWXYÝZŽ'"/>
-    <xsl:variable name="ascii"     select="'AAABCCDDEEFGHIIJKLLLMNNOOOPQRRSSTTUUVWXYYZZ'"/>
     <xsl:variable name="months" select="'JANFEBMARAPRMÁJJÚNJÚLAUGSEPOKTNOVDEC'"/>
     <xsl:variable name="barcodeChars" select="'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/ '"/>
 
-    <!-- ===================== Page ===================== -->
     <xsl:template match="/pl:palubneListky">
         <html lang="sk">
             <head>
                 <title>Palubné lístky – <xsl:value-of select="@rezervacia"/></title>
                 <style>
+                    @page {
+                        size: A4 portrait;
+                        margin: 8mm;
+                    }
                     * { box-sizing: border-box; margin: 0; padding: 0; }
                     body {
-                        background: #e6e8eb;
+                        background: #f0f2f5;
                         color: #1b1f24;
-                        font-family: "Segoe UI", Arial, Helvetica, sans-serif;
-                        padding: 10mm 0;
-                    }
-                    .page-header {
-                        width: 200mm; margin: 0 auto 6mm;
-                        display: flex; justify-content: space-between; align-items: baseline;
-                        color: #4a5260; font-size: 10pt;
-                    }
-                    .page-header h1 { font-size: 14pt; color: #1b1f24; }
-
-                    /* ---------- boarding pass ---------- */
-                    .pass {
-                        width: 200mm; min-height: 82mm; margin: 0 auto 8mm;
-                        display: flex;
-                        background: #fffdf7;
-                        border-radius: 3mm;
-                        box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 4px 14px rgba(0,0,0,.08);
-                        overflow: hidden;
-                        page-break-inside: avoid; break-inside: avoid;
-                    }
-                    .main { flex: 1; display: flex; flex-direction: column; }
-                    .stub {
-                        width: 58mm; position: relative;
-                        border-left: 0.6mm dashed #b9b4a8;
-                        display: flex; flex-direction: column;
-                    }
-                    /* perforation notches */
-                    .stub::before, .stub::after {
-                        content: ""; position: absolute; left: -3.3mm;
-                        width: 6mm; height: 6mm; border-radius: 50%;
-                        background: #e6e8eb;
-                    }
-                    .stub::before { top: -3mm; }
-                    .stub::after  { bottom: -3mm; }
-
-                    .band {
-                        background: #0d2b4e; color: #fff;
-                        display: flex; justify-content: space-between; align-items: center;
-                        padding: 2.5mm 5mm; min-height: 11mm;
-                    }
-                    .band .carrier { font-weight: 700; font-size: 12pt; letter-spacing: .02em; }
-                    .band .title { font-size: 10pt; font-weight: 600; letter-spacing: .12em; text-align: right; }
-                    .band .title small { display: block; font-size: 7pt; font-weight: 400; opacity: .75; }
-                    .class-business .band, .class-first .band { border-bottom: 1.2mm solid #c9a13b; }
-
-                    .content { padding: 3.5mm 5mm 3mm; display: flex; flex-direction: column; gap: 3mm; flex: 1; }
-                    .row { display: flex; gap: 4mm; }
-                    .row > .field { flex: 1; }
-                    .field .label {
-                        font-size: 6.5pt; text-transform: uppercase; letter-spacing: .06em;
-                        color: #6b7280; white-space: nowrap;
-                    }
-                    .field .label i { font-style: normal; color: #9aa0a8; }
-                    .field .value {
-                        font-family: Consolas, "Courier New", monospace;
-                        font-size: 12pt; font-weight: 700; margin-top: .5mm; white-space: nowrap;
-                    }
-                    .field .value.large { font-size: 15pt; }
-                    .field .value.name { font-size: 14pt; }
-
-                    .route { display: flex; align-items: center; gap: 4mm; }
-                    .airport .code { font-family: Consolas, "Courier New", monospace; font-size: 26pt; font-weight: 700; line-height: 1; }
-                    .airport .city { font-size: 9pt; color: #4a5260; margin-top: .8mm; }
-                    .airport .time { font-family: Consolas, "Courier New", monospace; font-size: 11pt; font-weight: 700; margin-top: .8mm; }
-                    .airport .time small { font-size: 7.5pt; font-weight: 400; color: #6b7280; }
-                    .airport.right { text-align: right; }
-                    .flight-path { flex: 1; text-align: center; color: #6b7280; font-size: 8pt; }
-                    .flight-path .line { display: flex; align-items: center; gap: 2mm; color: #0d2b4e; font-size: 13pt; }
-                    .flight-path .line::before, .flight-path .line::after {
-                        content: ""; flex: 1; border-top: 0.4mm dotted #9aa0a8;
+                        font-family: Arial, Helvetica, sans-serif;
+                        padding: 10px 0;
                     }
 
-                    .grid {
-                        display: grid; grid-template-columns: repeat(5, 1fr);
-                        border-top: 0.3mm solid #e2ddd0; border-bottom: 0.3mm solid #e2ddd0;
-                        padding: 2mm 0;
-                    }
-                    .grid .field + .field { border-left: 0.3mm solid #e2ddd0; padding-left: 3mm; }
-
-                    .footer { display: flex; justify-content: space-between; align-items: flex-end; gap: 4mm; margin-top: auto; }
-
-                    .priority {
-                        display: inline-block; background: #c9a13b; color: #1b1f24;
-                        font-size: 8pt; font-weight: 700; letter-spacing: .1em;
-                        padding: .5mm 2mm; border-radius: 1mm;
+                    .page-header-table {
+                        width: 100%;
+                        margin-bottom: 12px;
+                        color: #4a5260;
+                        font-size: 10pt;
                     }
 
-                    /* barcode – generated from the data, decorative only */
-                    .barcode { display: flex; align-items: stretch; height: 11mm; }
-                    .barcode span { display: block; }
-                    .barcode .bar { background: #1b1f24; }
-                    .barcode-text { font-family: Consolas, "Courier New", monospace; font-size: 6pt; color: #6b7280; margin-top: .6mm; letter-spacing: .05em; }
-
-                    /* stub */
-                    .stub .band { padding: 2.5mm 4mm; }
-                    .stub .content { padding: 3mm 4mm; gap: 2.2mm; }
-                    .stub .field .value { font-size: 10pt; }
-                    .stub .route-short { font-family: Consolas, "Courier New", monospace; font-size: 15pt; font-weight: 700; }
-                    .stub .route-short span { color: #9aa0a8; font-size: 11pt; padding: 0 1mm; }
-                    .stub .seat-box {
-                        border: 0.4mm solid #0d2b4e; border-radius: 1.5mm; text-align: center; padding: 1.5mm;
+                    .pass-card {
+                        width: 100%;
+                        margin-bottom: 16px;
+                        background: #ffffff;
+                        border: 1px solid #c9c3b6;
+                        border-radius: 6px;
+                        border-collapse: separate;
+                        border-spacing: 0;
+                        page-break-inside: avoid;
                     }
-                    .stub .seat-box .value { font-size: 20pt; line-height: 1.1; }
+
+                    .main-cell {
+                        vertical-align: top;
+                        padding: 0;
+                    }
+                    .stub-cell {
+                        width: 210px;
+                        vertical-align: top;
+                        border-left: 2px dashed #b9b4a8;
+                        padding: 0;
+                        background-color: #faf9f6;
+                    }
+
+                    .band-table {
+                        width: 100%;
+                        background: #0d2b4e;
+                        color: #ffffff;
+                        padding: 8px 12px;
+                        border-collapse: collapse;
+                    }
+                    .band-carrier { font-weight: bold; font-size: 12pt; text-align: left; }
+                    .band-title { font-weight: bold; font-size: 9pt; text-align: right; letter-spacing: 1px; }
+                    .band-title small { display: block; font-size: 6.5pt; font-weight: normal; opacity: 0.8; letter-spacing: 0; }
+
+                    .content-box { padding: 10px 12px; }
+
+                    .field-label {
+                        font-size: 6.5pt;
+                        text-transform: uppercase;
+                        color: #6b7280;
+                        font-weight: bold;
+                    }
+                    .field-value {
+                        font-family: "Courier New", Courier, monospace;
+                        font-size: 11pt;
+                        font-weight: bold;
+                        color: #1b1f24;
+                    }
+                    .field-value.large { font-size: 14pt; }
+                    .field-value.name { font-size: 12pt; }
+
+                    .grid-table {
+                        width: 100%;
+                        border-top: 1px solid #e2ddd0;
+                        border-bottom: 1px solid #e2ddd0;
+                        border-collapse: collapse;
+                        margin: 8px 0;
+                    }
+                    .grid-td {
+                        width: 20%;
+                        padding: 5px 4px;
+                        vertical-align: top;
+                        border-right: 1px solid #e2ddd0;
+                    }
+                    .grid-td:last-child { border-right: none; }
+
+                    .priority-tag {
+                        background: #c9a13b;
+                        color: #1b1f24;
+                        font-size: 7.5pt;
+                        font-weight: bold;
+                        padding: 2px 5px;
+                        border-radius: 3px;
+                        display: inline-block;
+                    }
+
+                    .seat-box {
+                        border: 2px solid #0d2b4e;
+                        border-radius: 4px;
+                        text-align: center;
+                        padding: 4px;
+                        background: #ffffff;
+                    }
 
                     @media print {
                         body { background: #fff; padding: 0; }
-                        .page-header { display: none; }
-                        .pass { box-shadow: none; border: 0.3mm solid #b9b4a8; }
-                        .stub::before, .stub::after { background: #fff; }
-                        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                     }
                 </style>
             </head>
             <body>
-                <div class="page-header">
-                    <h1>Palubné lístky</h1>
-                    <span>
-                        Rezervácia <strong><xsl:value-of select="@rezervacia"/></strong>
-                        · <xsl:value-of select="count(pl:pasazieri/pl:pasazier)"/>
-                        <xsl:choose>
-                            <xsl:when test="count(pl:pasazieri/pl:pasazier) = 1"> pasažier</xsl:when>
-                            <xsl:when test="count(pl:pasazieri/pl:pasazier) &lt; 5"> pasažieri</xsl:when>
-                            <xsl:otherwise> pasažierov</xsl:otherwise>
-                        </xsl:choose>
-                    </span>
-                </div>
+                <table class="page-header-table">
+                    <tr>
+                        <td style="text-align: left;">
+                            <h1 style="font-size: 13pt; color: #1b1f24;">Palubné lístky</h1>
+                        </td>
+                        <td style="text-align: right;">
+                            Rezervácia <strong><xsl:value-of select="@rezervacia"/></strong>
+                            · <xsl:value-of select="count(pl:pasazieri/pl:pasazier)"/> pasažier(i)
+                        </td>
+                    </tr>
+                </table>
 
                 <xsl:for-each select="pl:pasazieri/pl:pasazier">
                     <xsl:call-template name="boarding-pass">
@@ -161,7 +148,6 @@
         </html>
     </xsl:template>
 
-    <!-- ===================== One boarding pass (context = pasazier) ===================== -->
     <xsl:template name="boarding-pass">
         <xsl:param name="flight"/>
         <xsl:param name="pnr"/>
@@ -171,8 +157,10 @@
             <xsl:value-of select="translate(pl:priezvisko, $lowercase, $uppercase)"/>
             <xsl:text>/</xsl:text>
             <xsl:value-of select="translate(pl:meno, $lowercase, $uppercase)"/>
-            <xsl:text> </xsl:text>
-            <xsl:value-of select="pl:titul"/>
+            <xsl:if test="pl:titul">
+                <xsl:text> </xsl:text>
+                <xsl:value-of select="pl:titul"/>
+            </xsl:if>
         </xsl:variable>
 
         <xsl:variable name="flightDate">
@@ -181,205 +169,267 @@
             </xsl:call-template>
         </xsl:variable>
 
-        <xsl:variable name="barcodeData" select="concat('M1',
-            translate(translate(pl:priezvisko, $lowercase, $uppercase), $uppercase, $ascii), '/',
-            translate(translate(pl:meno, $lowercase, $uppercase), $uppercase, $ascii), ' ',
-            $pnr, ' ', $flight/pl:odlet/pl:letisko, $flight/pl:prilet/pl:letisko, $flight/pl:cisloLetu, ' ',
-            pl:sedadlo, ' ', $sequence)"/>
-
+        <xsl:variable name="barcodeCode" select="concat($pnr, $flight/pl:cisloLetu, pl:sedadlo, $sequence)"/>
         <xsl:variable name="hasPriority" select="pl:prednostnyNastup = 'true' or pl:prednostnyNastup = '1'"/>
 
-        <section class="pass class-{@trieda}">
-            <!-- ========== main part ========== -->
-            <div class="main">
-                <div class="band">
-                    <span class="carrier"><xsl:value-of select="$flight/pl:dopravca"/></span>
-                    <span class="title">
-                        PALUBNÝ LÍSTOK
-                        <small>BOARDING PASS · <xsl:call-template name="class-name"/></small>
-                    </span>
-                </div>
+        <table class="pass-card">
+            <tr>
+                <!-- Hlavná časť -->
+                <td class="main-cell">
+                    <table class="band-table">
+                        <tr>
+                            <td class="band-carrier"><xsl:value-of select="$flight/pl:dopravca"/></td>
+                            <td class="band-title">
+                                PALUBNÝ LÍSTOK
+                                <small>BOARDING PASS · <xsl:call-template name="class-name"/></small>
+                            </td>
+                        </tr>
+                    </table>
 
-                <div class="content">
-                    <div class="row">
-                        <div class="field" style="flex: 3">
-                            <div class="label">Meno pasažiera <i>/ Passenger name</i></div>
-                            <div class="value name"><xsl:value-of select="$displayName"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Rezervácia <i>/ PNR</i></div>
-                            <div class="value name"><xsl:value-of select="$pnr"/></div>
-                        </div>
-                    </div>
+                    <div class="content-box">
+                        <table style="width: 100%; margin-bottom: 6px;">
+                            <tr>
+                                <td style="width: 70%;">
+                                    <div class="field-label">Meno pasažiera / Passenger name</div>
+                                    <div class="field-value name"><xsl:value-of select="$displayName"/></div>
+                                </td>
+                                <td style="width: 30%;">
+                                    <div class="field-label">Rezervácia / PNR</div>
+                                    <div class="field-value name"><xsl:value-of select="$pnr"/></div>
+                                </td>
+                            </tr>
+                        </table>
 
-                    <div class="route">
-                        <xsl:call-template name="airport">
-                            <xsl:with-param name="place" select="$flight/pl:odlet"/>
+                        <table style="width: 100%; margin: 6px 0;">
+                            <tr>
+                                <td style="width: 35%;">
+                                    <div style="font-family: 'Courier New', monospace; font-size: 22pt; font-weight: bold; line-height: 1;"><xsl:value-of select="$flight/pl:odlet/pl:letisko"/></div>
+                                    <div style="font-size: 8.5pt; color: #4a5260; margin-top: 2px;"><xsl:value-of select="$flight/pl:odlet/pl:mesto"/></div>
+                                    <div style="font-family: 'Courier New', monospace; font-size: 10pt; font-weight: bold; margin-top: 2px;"><xsl:value-of select="substring($flight/pl:odlet/pl:cas, 12, 5)"/></div>
+                                </td>
+                                <td style="width: 30%; text-align: center; color: #6b7280; vertical-align: middle;">
+                                    <div style="font-size: 12pt; color: #0d2b4e;">✈</div>
+                                    <div style="font-size: 7.5pt; margin-top: 2px;">
+                                        <xsl:call-template name="format-duration">
+                                            <xsl:with-param name="duration" select="$flight/pl:dlzkaLetu"/>
+                                        </xsl:call-template>
+                                    </div>
+                                </td>
+                                <td style="width: 35%; text-align: right;">
+                                    <div style="font-family: 'Courier New', monospace; font-size: 22pt; font-weight: bold; line-height: 1;"><xsl:value-of select="$flight/pl:prilet/pl:letisko"/></div>
+                                    <div style="font-size: 8.5pt; color: #4a5260; margin-top: 2px;"><xsl:value-of select="$flight/pl:prilet/pl:mesto"/></div>
+                                    <div style="font-family: 'Courier New', monospace; font-size: 10pt; font-weight: bold; margin-top: 2px;"><xsl:value-of select="substring($flight/pl:prilet/pl:cas, 12, 5)"/></div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table class="grid-table">
+                            <tr>
+                                <td class="grid-td">
+                                    <div class="field-label">Let / Flight</div>
+                                    <div class="field-value large"><xsl:value-of select="$flight/pl:cisloLetu"/></div>
+                                </td>
+                                <td class="grid-td">
+                                    <div class="field-label">Dátum / Date</div>
+                                    <div class="field-value large"><xsl:value-of select="$flightDate"/></div>
+                                </td>
+                                <td class="grid-td">
+                                    <div class="field-label">Nástup / Boarding</div>
+                                    <div class="field-value large"><xsl:value-of select="substring($flight/pl:nastup, 1, 5)"/></div>
+                                </td>
+                                <td class="grid-td">
+                                    <div class="field-label">Brána / Gate</div>
+                                    <div class="field-value large"><xsl:value-of select="$flight/pl:gate"/></div>
+                                </td>
+                                <td class="grid-td">
+                                    <div class="field-label">Sedadlo / Seat</div>
+                                    <div class="field-value large"><xsl:value-of select="pl:sedadlo"/></div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 25%; vertical-align: top;">
+                                    <div class="field-label">Trieda / Class</div>
+                                    <div class="field-value"><xsl:call-template name="class-name"/></div>
+                                </td>
+                                <td style="width: 25%; vertical-align: top;">
+                                    <div class="field-label">Batožina / Baggage</div>
+                                    <div class="field-value"><xsl:call-template name="baggage"/></div>
+                                </td>
+                                <td style="width: 25%; vertical-align: top;">
+                                    <div class="field-label">Dátum nar.</div>
+                                    <div class="field-value">
+                                        <xsl:value-of select="concat(substring(pl:datumNarodenia, 9, 2), '.', substring(pl:datumNarodenia, 6, 2), '.', substring(pl:datumNarodenia, 1, 4))"/>
+                                    </div>
+                                </td>
+                                <td style="width: 25%; vertical-align: top;">
+                                    <div class="field-label">Prednostný nástup</div>
+                                    <div class="field-value">
+                                        <xsl:choose>
+                                            <xsl:when test="$hasPriority"><span class="priority-tag">PRIORITY</span></xsl:when>
+                                            <xsl:otherwise>—</xsl:otherwise>
+                                        </xsl:choose>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <xsl:call-template name="render-barcode">
+                            <xsl:with-param name="text" select="$barcodeCode"/>
                         </xsl:call-template>
-                        <div class="flight-path">
-                            <div class="line">✈</div>
-                            <div>
-                                <xsl:call-template name="format-duration">
-                                    <xsl:with-param name="duration" select="$flight/pl:dlzkaLetu"/>
-                                </xsl:call-template>
-                            </div>
+                    </div>
+                </td>
+
+                <!-- Ústrižok (STUB) -->
+                <td class="stub-cell">
+                    <table class="band-table">
+                        <tr>
+                            <td class="band-carrier" style="font-size: 8.5pt;"><xsl:value-of select="$flight/pl:dopravca"/></td>
+                            <td class="band-title">SEQ <xsl:value-of select="$sequence"/></td>
+                        </tr>
+                    </table>
+                    <div class="content-box">
+                        <div style="margin-bottom: 5px;">
+                            <div class="field-label">Meno / Name</div>
+                            <div class="field-value" style="font-size: 9.5pt;"><xsl:value-of select="$displayName"/></div>
                         </div>
-                        <xsl:call-template name="airport">
-                            <xsl:with-param name="place" select="$flight/pl:prilet"/>
-                            <xsl:with-param name="cssClass" select="'airport right'"/>
-                            <xsl:with-param name="compareWith" select="$flight/pl:odlet/pl:cas"/>
+                        <div style="font-family: 'Courier New', monospace; font-size: 12pt; font-weight: bold; margin-bottom: 5px;">
+                            <xsl:value-of select="$flight/pl:odlet/pl:letisko"/> → <xsl:value-of select="$flight/pl:prilet/pl:letisko"/>
+                        </div>
+                        <table style="width: 100%; margin-bottom: 5px;">
+                            <tr>
+                                <td>
+                                    <div class="field-label">Let</div>
+                                    <div class="field-value"><xsl:value-of select="$flight/pl:cisloLetu"/></div>
+                                </td>
+                                <td>
+                                    <div class="field-label">Dátum</div>
+                                    <div class="field-value"><xsl:value-of select="$flightDate"/></div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table style="width: 100%; margin-bottom: 5px;">
+                            <tr>
+                                <td class="seat-box" style="width: 50%;">
+                                    <div class="field-label">Sedadlo</div>
+                                    <div style="font-size: 15pt; font-weight: bold;"><xsl:value-of select="pl:sedadlo"/></div>
+                                </td>
+                                <td style="padding-left: 6px; vertical-align: top;">
+                                    <div class="field-label">PNR</div>
+                                    <div class="field-value"><xsl:value-of select="$pnr"/></div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <xsl:call-template name="render-barcode">
+                            <xsl:with-param name="text" select="$barcodeCode"/>
                         </xsl:call-template>
                     </div>
-
-                    <div class="grid">
-                        <div class="field">
-                            <div class="label">Let <i>/ Flight</i></div>
-                            <div class="value large"><xsl:value-of select="$flight/pl:cisloLetu"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Dátum <i>/ Date</i></div>
-                            <div class="value large"><xsl:value-of select="$flightDate"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Nástup <i>/ Boarding</i></div>
-                            <div class="value large"><xsl:value-of select="substring($flight/pl:nastup, 1, 5)"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Brána <i>/ Gate</i></div>
-                            <div class="value large"><xsl:value-of select="$flight/pl:gate"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Sedadlo <i>/ Seat</i></div>
-                            <div class="value large"><xsl:value-of select="pl:sedadlo"/></div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="field">
-                            <div class="label">Trieda <i>/ Class</i></div>
-                            <div class="value"><xsl:call-template name="class-name"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Batožina <i>/ Baggage</i></div>
-                            <div class="value"><xsl:call-template name="baggage"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Dátum narodenia <i>/ Date of birth</i></div>
-                            <div class="value">
-                                <xsl:value-of select="concat(substring(pl:datumNarodenia, 9, 2), '.',
-                                    substring(pl:datumNarodenia, 6, 2), '.', substring(pl:datumNarodenia, 1, 4))"/>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Prednostný nástup <i>/ Priority</i></div>
-                            <div class="value">
-                                <xsl:choose>
-                                    <xsl:when test="$hasPriority">
-                                        <span class="priority">PRIORITY</span>
-                                    </xsl:when>
-                                    <xsl:otherwise>—</xsl:otherwise>
-                                </xsl:choose>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="footer">
-                        <div>
-                            <xsl:call-template name="barcode">
-                                <xsl:with-param name="data" select="$barcodeData"/>
-                            </xsl:call-template>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========== tear-off stub ========== -->
-            <aside class="stub">
-                <div class="band">
-                    <span class="carrier" style="font-size: 9pt"><xsl:value-of select="$flight/pl:dopravca"/></span>
-                    <span class="title">SEQ <xsl:value-of select="$sequence"/></span>
-                </div>
-                <div class="content">
-                    <div class="field">
-                        <div class="label">Meno <i>/ Name</i></div>
-                        <div class="value"><xsl:value-of select="$displayName"/></div>
-                    </div>
-                    <div class="route-short">
-                        <xsl:value-of select="$flight/pl:odlet/pl:letisko"/>
-                        <span>→</span>
-                        <xsl:value-of select="$flight/pl:prilet/pl:letisko"/>
-                    </div>
-                    <div class="row">
-                        <div class="field">
-                            <div class="label">Let</div>
-                            <div class="value"><xsl:value-of select="$flight/pl:cisloLetu"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Dátum</div>
-                            <div class="value"><xsl:value-of select="$flightDate"/></div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="field">
-                            <div class="label">Brána</div>
-                            <div class="value"><xsl:value-of select="$flight/pl:gate"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">Nástup</div>
-                            <div class="value"><xsl:value-of select="substring($flight/pl:nastup, 1, 5)"/></div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="field seat-box">
-                            <div class="label">Sedadlo / Seat</div>
-                            <div class="value"><xsl:value-of select="pl:sedadlo"/></div>
-                        </div>
-                        <div class="field">
-                            <div class="label">PNR</div>
-                            <div class="value"><xsl:value-of select="$pnr"/></div>
-                            <xsl:if test="$hasPriority">
-                                <div style="margin-top: 1.5mm"><span class="priority">PRIORITY</span></div>
-                            </xsl:if>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-        </section>
+                </td>
+            </tr>
+        </table>
     </xsl:template>
 
-    <!-- ===================== Helper templates ===================== -->
+    <!-- Vektorový SVG čiarový kód bez akýchkoľvek externých fontov -->
+        <!-- Vektorový SVG čiarový kód bez bezdôvodnej medzery -->
+        <!-- Vektorový SVG čiarový kód s dynamicky dopočítanou šírkou -->
+        <!-- Vektorový SVG čiarový kód plne vycentrovaný pre HTML aj PDF -->
+    <xsl:template name="render-barcode">
+        <xsl:param name="text"/>
 
-    <!-- Departure / arrival airport -->
-    <xsl:template name="airport">
-        <xsl:param name="place"/>
-        <xsl:param name="cssClass" select="'airport'"/>
-        <xsl:param name="compareWith"/>
-        <div class="{$cssClass}">
-            <div class="code"><xsl:value-of select="$place/pl:letisko"/></div>
-            <div class="city">
-                <xsl:value-of select="$place/pl:mesto"/>
-                <xsl:if test="$place/pl:terminal">
-                    <xsl:text> · Terminál </xsl:text>
-                    <xsl:value-of select="$place/pl:terminal"/>
-                </xsl:if>
-            </div>
-            <div class="time">
-                <xsl:value-of select="substring($place/pl:cas, 12, 5)"/>
-                <!-- arrival on a different day than departure -->
-                <xsl:if test="$compareWith and substring($place/pl:cas, 1, 10) != substring($compareWith, 1, 10)">
-                    <small>
-                        <xsl:text> (</xsl:text>
-                        <xsl:call-template name="format-date">
-                            <xsl:with-param name="date" select="$place/pl:cas"/>
-                        </xsl:call-template>
-                        <xsl:text>)</xsl:text>
-                    </small>
-                </xsl:if>
-            </div>
+        <xsl:variable name="exactWidth">
+            <xsl:call-template name="calc-barcode-width">
+                <xsl:with-param name="code" select="$text"/>
+            </xsl:call-template>
+        </xsl:variable>
+
+        <div style="width: 100%; margin-top: 6px;">
+            <table align="center" style="margin: 0 auto; border-collapse: collapse; border: none;">
+                <tr>
+                    <td style="text-align: center; padding: 0; border: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="{$exactWidth}" height="32" viewBox="0 0 {$exactWidth} 32" style="display: block; margin: 0 auto;">
+                            <!-- Štartovacie paličky -->
+                            <rect x="2" y="0" width="2" height="32" fill="#1b1f24"/>
+                            <rect x="5" y="0" width="1" height="32" fill="#1b1f24"/>
+
+                            <!-- Vykreslenie znakov + stop paličiek -->
+                            <xsl:call-template name="barcode-bars">
+                                <xsl:with-param name="code" select="$text"/>
+                                <xsl:with-param name="i" select="1"/>
+                                <xsl:with-param name="x" select="8"/>
+                            </xsl:call-template>
+                        </svg>
+                        <div style="font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; color: #4a5260; margin-top: 1px; text-align: center;">
+                            <xsl:value-of select="$text"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
     </xsl:template>
 
-    <!-- 2026-10-15T14:30:00+02:00 → 15 OKT 2026 -->
+    <xsl:template name="barcode-bars">
+        <xsl:param name="code"/>
+        <xsl:param name="i" select="1"/>
+        <xsl:param name="x" select="8"/>
+
+        <xsl:choose>
+            <xsl:when test="$i &lt;= string-length($code)">
+                <xsl:variable name="char" select="substring($code, $i, 1)"/>
+                <xsl:variable name="pos" select="string-length(substring-before($barcodeChars, $char))"/>
+
+                <xsl:variable name="w1" select="($pos mod 2) + 1"/>
+                <xsl:variable name="gap" select="(floor($pos div 2) mod 2) + 1"/>
+                <xsl:variable name="w2" select="(floor($pos div 4) mod 2) + 1"/>
+
+                <rect x="{$x}" y="0" width="{$w1}" height="32" fill="#1b1f24"/>
+                <rect x="{$x + $w1 + $gap}" y="0" width="{$w2}" height="32" fill="#1b1f24"/>
+
+                <xsl:call-template name="barcode-bars">
+                    <xsl:with-param name="code" select="$code"/>
+                    <xsl:with-param name="i" select="$i + 1"/>
+                    <xsl:with-param name="x" select="$x + $w1 + $gap + $w2 + 2"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- Ukončovacie (stop) paličky -->
+                <rect x="{$x}" y="0" width="1" height="32" fill="#1b1f24"/>
+                <rect x="{$x + 2}" y="0" width="3" height="32" fill="#1b1f24"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- Pomocná šablóna pre kalkuláciu finálnej šírky SVG -->
+    <xsl:template name="calc-barcode-width">
+        <xsl:param name="code"/>
+        <xsl:param name="i" select="1"/>
+        <xsl:param name="x" select="8"/>
+
+        <xsl:choose>
+            <xsl:when test="$i &lt;= string-length($code)">
+                <xsl:variable name="char" select="substring($code, $i, 1)"/>
+                <xsl:variable name="pos" select="string-length(substring-before($barcodeChars, $char))"/>
+
+                <xsl:variable name="w1" select="($pos mod 2) + 1"/>
+                <xsl:variable name="gap" select="(floor($pos div 2) mod 2) + 1"/>
+                <xsl:variable name="w2" select="(floor($pos div 4) mod 2) + 1"/>
+
+                <xsl:call-template name="calc-barcode-width">
+                    <xsl:with-param name="code" select="$code"/>
+                    <xsl:with-param name="i" select="$i + 1"/>
+                    <xsl:with-param name="x" select="$x + $w1 + $gap + $w2 + 2"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="$x + 6"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+
+
     <xsl:template name="format-date">
         <xsl:param name="date"/>
         <xsl:value-of select="substring($date, 9, 2)"/>
@@ -389,7 +439,6 @@
         <xsl:value-of select="substring($date, 1, 4)"/>
     </xsl:template>
 
-    <!-- PT2H35M → 2 h 35 min -->
     <xsl:template name="format-duration">
         <xsl:param name="duration"/>
         <xsl:variable name="time" select="substring-after($duration, 'T')"/>
@@ -401,12 +450,10 @@
             </xsl:choose>
         </xsl:variable>
         <xsl:variable name="minutes" select="substring-before($rest, 'M')"/>
-        <xsl:if test="$hours != ''"><xsl:value-of select="$hours"/> h</xsl:if>
-        <xsl:if test="$hours != '' and $minutes != ''"><xsl:text> </xsl:text></xsl:if>
+        <xsl:if test="$hours != ''"><xsl:value-of select="$hours"/> h </xsl:if>
         <xsl:if test="$minutes != ''"><xsl:value-of select="$minutes"/> min</xsl:if>
     </xsl:template>
 
-    <!-- context = pasazier -->
     <xsl:template name="class-name">
         <xsl:choose>
             <xsl:when test="@trieda = 'first'">FIRST</xsl:when>
@@ -415,41 +462,11 @@
         </xsl:choose>
     </xsl:template>
 
-    <!-- context = pasazier -->
     <xsl:template name="baggage">
         <xsl:choose>
             <xsl:when test="number(pl:batozinaKg) = 0">Len príručná</xsl:when>
             <xsl:otherwise><xsl:value-of select="format-number(pl:batozinaKg, '0.#')"/> kg</xsl:otherwise>
         </xsl:choose>
-    </xsl:template>
-
-    <!-- Barcode: bar widths are derived from the data characters (decorative only, not scannable) -->
-    <xsl:template name="barcode">
-        <xsl:param name="data"/>
-        <div class="barcode">
-            <span class="bar" style="width: 2px"></span><span style="width: 1px"></span>
-            <span class="bar" style="width: 1px"></span><span style="width: 2px"></span>
-            <xsl:call-template name="barcode-bars">
-                <xsl:with-param name="text" select="$data"/>
-            </xsl:call-template>
-            <span class="bar" style="width: 2px"></span><span style="width: 1px"></span>
-            <span class="bar" style="width: 1px"></span>
-        </div>
-        <div class="barcode-text"><xsl:value-of select="$data"/></div>
-    </xsl:template>
-
-    <xsl:template name="barcode-bars">
-        <xsl:param name="text"/>
-        <xsl:if test="string-length($text) &gt; 0">
-            <xsl:variable name="i" select="string-length(substring-before($barcodeChars, substring($text, 1, 1)))"/>
-            <span class="bar" style="width: {$i mod 3 + 1}px"></span>
-            <span style="width: {floor($i div 3) mod 3 + 1}px"></span>
-            <span class="bar" style="width: {floor($i div 9) mod 2 + 1}px"></span>
-            <span style="width: {($i + 1) mod 2 + 1}px"></span>
-            <xsl:call-template name="barcode-bars">
-                <xsl:with-param name="text" select="substring($text, 2)"/>
-            </xsl:call-template>
-        </xsl:if>
     </xsl:template>
 
 </xsl:stylesheet>
