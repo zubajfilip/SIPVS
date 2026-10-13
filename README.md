@@ -138,6 +138,17 @@ Výhody elektronického formulára, ktoré aplikácia využíva:
 - **dopočítavanie** – dĺžka letu (`xsd:duration`) sa vypočíta z času odletu a príletu v ich časových pásmach
 - **komfort** – automatické veľké písmená v kódoch, pridávanie/odoberanie pasažierov, tlačidlo *Vyplniť vzorové údaje*
 
+## E-signature essentials
+1. Stiahnutie priečinku Cviko2 zo zdielaného Google drive
+- z podpriečinku Certificate rozkliknúť dtccert.cer a FIITPodpisovatel.pfx -> nainštalovať oboje
+2. Stiahnutie D.Launchera (lokálne na ntb), D.Bridge (v prehliadači)
+- tu nájdete obe https://www.slovensko.sk/sk/na-stiahnutie
+3. Enjoy
+
+**Testovacia stránka**
+https://qes.ditec.sk/upvs/zep/dbridge_js/v1.0/test/dsignerbp.html
+
+
 ### Spustenie
 
 Z koreňa projektu (tam, kde je `palubnyListok.xsd`):

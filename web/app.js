@@ -379,13 +379,82 @@ $('#transform').addEventListener('click', async () => {
     $('#result').scrollIntoView({ behavior: 'smooth' });
 });
 
+// helper funkcia, zachovava kontext objektu
+function dBridgeCall(obj, methodName, ...args) {
+    return new Promise((resolve, reject) => {
+        obj[methodName](...args, {
+            onSuccess: resolve,
+            onError: (e) => {
+                let msg = "Neznáma chyba pri podpisovaní.";
+                if (window.ditec && ditec.utils && ditec.utils.isDitecError(e)) {
+                    if (e.code === ditec.dSigXadesBpJs.ERROR_SIGNING_CANCELLED) {
+                        msg = "ZRUŠENÉ";
+                    } else {
+                        msg = `Chyba ${e.code}: ${e.message}`;
+                    }
+                }
+                reject(new Error(msg));
+            }
+        });
+    });
+}
+
 $('#sign').addEventListener('click', async () => {
-    const res = await post('/api/sign'); 
-    if (!res.ok) {
-        showMessage('Podpisovanie zlyhalo: ' + escapeHtml(res.error), 'failure');
-        return;
+    try {
+        const res = await post('/api/sign');
+        if (!res.ok) {
+            showMessage('Chyba pri sťahovaní podkladov na podpis: ' + escapeHtml(res.error), 'failure');
+            return;
+        }
+
+        showMessage('Inicializujem aplikáciu D.Signer...', '');
+
+        const dSig = ditec.dSigXadesBpJs;
+
+        // Upravené volania – posielame objekt a názov metódy ako text
+        await dBridgeCall(dSig, 'deploy', null);
+        await dBridgeCall(dSig, 'initialize');
+        await dBridgeCall(dSig, 'setLanguage', dSig.LANG_SK);
+
+        // 3. Pridať XMLDataContainer (vloží do podpisu XML + XSD + XSLT)
+        await dBridgeCall(dSig, 'addXmlObject',
+            "xml-01", "Palubný lístok (XML)",
+            "http://data.gov.sk/def/container/xmldatacontainer+xml/1.1",
+            res.xml, "XML_Formular", "1.0",
+            //URI format
+            res.xsd, "https://localhost/palubnyListok.xsd",
+            res.xsl, "https://localhost/palubnyListok.xsl", 
+            dSig.XML_MEDIA_DESTINATION_TYPE_DESC_HTML,
+            "http://www.w3.org/1999/XSL/Transform",
+            "HTML", false, dSig.XML_XDC_NAMESPACE_URI_V1_1
+        );
+
+        await dBridgeCall(dSig, 'addPdfObject',
+            "pdf-01", "Palubný lístok (PDF)",
+            res.pdfBase64, "",
+            "http://data.gov.sk/def/container/pdf",
+            2, false
+        );
+
+        showMessage('Čakám na dokončenie podpisu (postupujte podľa pokynov v okne D.Signer)...', '');
+        await dBridgeCall(dSig, 'sign', "SignatureId01", dSig.SHA256, "");
+
+        const asiceBase64 = await dBridgeCall(dSig, 'getSignatureWithASiCEnvelopeBase64');
+
+        const link = document.createElement('a');
+        link.href = 'data:application/vnd.etsi.asic-e+zip;base64,' + asiceBase64;
+        link.download = 'palubnyListok.asice';
+        link.click();
+
+        showMessage('Dokument bol úspešne podpísaný a stiahnutý ako <code>palubnyListok.asice</code>.', 'success');
+
+    } catch (e) {
+        if (e.message === "ZRUŠENÉ") {
+            showMessage('Podpisovanie bolo zrušené používateľom.', 'failure');
+        } else {
+            showMessage('Podpisovanie zlyhalo: ' + escapeHtml(e.message), 'failure');
+        }
     }
-    showMessage('Dokument bol úspešne podpísaný.', 'success');
     $('#result').scrollIntoView({ behavior: 'smooth' });
 });
 
