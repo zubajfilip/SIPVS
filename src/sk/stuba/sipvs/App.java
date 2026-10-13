@@ -77,6 +77,14 @@ public class App {
             return Map.of("file", relativePath(XML.getHtmlFile()), "url", "/output/palubnyListok.html");
         }));
 
+        server.createContext("/api/sign", api(form -> {
+            // e-sign logika or some shit
+            return Map.of(
+                "file", relativePath(XML.getXmlFile()), 
+                "message", "Dokument bol úspešne podpísaný"
+            );
+        }));
+
         server.start();
         System.out.println("Palubný lístok beží na http://localhost:" + port);
     }

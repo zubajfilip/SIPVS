@@ -370,12 +370,25 @@ $('#transform').addEventListener('click', async () => {
         showMessage('Transformácia zlyhala: ' + escapeHtml(res.error), 'failure');
         return;
     }
+    // make the e-sign button available fof click
+    document.getElementById('sign').disabled = false;
     showMessage(`HTML uložené do <code>${escapeHtml(res.file)}</code> · <a href="${escapeHtml(res.url)}" target="_blank" rel="noopener">otvoriť v novom okne</a>`, 'success');
     const iframe = $('#htmlPreview');
     iframe.src = res.url + '?t=' + Date.now();
     iframe.hidden = false;
     $('#result').scrollIntoView({ behavior: 'smooth' });
 });
+
+$('#sign').addEventListener('click', async () => {
+    const res = await post('/api/sign'); 
+    if (!res.ok) {
+        showMessage('Podpisovanie zlyhalo: ' + escapeHtml(res.error), 'failure');
+        return;
+    }
+    showMessage('Dokument bol úspešne podpísaný.', 'success');
+    $('#result').scrollIntoView({ behavior: 'smooth' });
+});
+
 
 // ===================== Sample data =====================
 
