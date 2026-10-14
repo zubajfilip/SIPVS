@@ -181,12 +181,12 @@ public class XmlService {
    public void transform() throws Exception {
         requireSavedXml();
 
-        // 1. XSLT transformácia (XML -> HTML)
+        // XML -> HTML
         Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(stylesheetFile.toFile()));
         Files.createDirectories(htmlFile.getParent());
         transformer.transform(new StreamSource(xmlFile.toFile()), new StreamResult(htmlFile.toFile()));
 
-        // 2. Generovanie PDF vo verzii PDF 1.4 (vyžadovanej pre D.Signer / DITEC)
+        // generovanie pdf, verzia 1.4 lebo vyssie nesli bruh
         Path pdfFile = htmlFile.getParent().resolve("palubnyListok.pdf");
 
         WriterProperties writerProperties = new WriterProperties()

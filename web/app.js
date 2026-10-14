@@ -411,21 +411,23 @@ $('#sign').addEventListener('click', async () => {
 
         const dSig = ditec.dSigXadesBpJs;
 
-        // Upravené volania – posielame objekt a názov metódy ako text
+        // posielam nazov metody do funkcie vyssie, nech to je take jednotne a cleaner
         await dBridgeCall(dSig, 'deploy', null);
         await dBridgeCall(dSig, 'initialize');
         await dBridgeCall(dSig, 'setLanguage', dSig.LANG_SK);
 
-        // 3. Pridať XMLDataContainer (vloží do podpisu XML + XSD + XSLT)
+        // vlozi do podpisu XML + XSD + XSLT (kontajneris)
         await dBridgeCall(dSig, 'addXmlObject',
             "xml-01", "Palubný lístok (XML data cont.)",
             "http://data.gov.sk/def/container/xmldatacontainer+xml/1.1",
+            // vpodstate zbytocne, iba na verziovanie, nazov formulara
             res.xml, "XML_Formular", "1.0",
             //URI format
             res.xsd, "https://localhost/palubnyListok.xsd",
             res.xsl, "https://localhost/palubnyListok.xsl", 
             dSig.XML_MEDIA_DESTINATION_TYPE_DESC_HTML,
             "http://www.w3.org/1999/XSL/Transform",
+            // vystup HTML, false=format nie je base64
             "HTML", false, dSig.XML_XDC_NAMESPACE_URI_V1_1
         );
 
@@ -433,6 +435,7 @@ $('#sign').addEventListener('click', async () => {
             "pdf-01", "Palubný lístok (PDF)",
             res.pdfBase64, "",
             "http://data.gov.sk/def/container/pdf",
+            // 2 = dsigner pouzije PdfBpVisualizer
             2, false
         );
 

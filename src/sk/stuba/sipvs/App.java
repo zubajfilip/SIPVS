@@ -78,14 +78,15 @@ public class App {
         }));
 
         server.createContext("/api/sign", api(form -> {
-            // load files to sign
+            // nacitanie files na podpisanie
             String xml = Files.readString(XML.getXmlFile(), StandardCharsets.UTF_8);
             String xsd = Files.readString(ROOT.resolve("palubnyListok.xsd"), StandardCharsets.UTF_8);
             String xsl = Files.readString(ROOT.resolve("palubnyListok.xsl"), StandardCharsets.UTF_8);
 
-            // Načítanie vygenerovaného PDF súboru
+            // nacitanie pdf suboru
             Path pdfPath = OUTPUT_DIR.resolve("palubnyListok.pdf");
             byte[] pdfBytes = Files.readAllBytes(pdfPath);
+            // base64 pre dsigner aj json, kt posielame
             String pdfBase64 = java.util.Base64.getEncoder().encodeToString(pdfBytes);
 
             return Map.of(
