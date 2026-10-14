@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Palubný lístok – formulár</title>
     <link rel="stylesheet" href="style.css">
+    <!-- scripty na podpis-->
+    <script src="https://www.slovensko.sk/static/zep/dbridge_js/v1.0/config.js"></script>
+    <script src="https://www.slovensko.sk/static/zep/dbridge_js/v1.0/dCommon.min.js"></script>
+    <script src="https://www.slovensko.sk/static/zep/dbridge_js/v1.0/dSigXadesBp.min.js"></script>
 </head>
 <body>
 <header class="top">
@@ -188,6 +192,7 @@
             <button type="button" id="save">Ulož XML</button>
             <button type="button" id="validate">Over XML voči XSD</button>
             <button type="button" id="transform">Transformuj XML do HTML</button>
+            <button type="button" id="sign" disabled>Podpíš</button>
         </div>
     </div>
 </div>

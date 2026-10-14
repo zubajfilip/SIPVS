@@ -77,13 +77,33 @@ public class App {
             return Map.of("file", relativePath(XML.getHtmlFile()), "url", "/output/palubnyListok.html");
         }));
 
+        server.createContext("/api/sign", api(form -> {
+            // nacitanie files na podpisanie
+            String xml = Files.readString(XML.getXmlFile(), StandardCharsets.UTF_8);
+            String xsd = Files.readString(ROOT.resolve("palubnyListok.xsd"), StandardCharsets.UTF_8);
+            String xsl = Files.readString(ROOT.resolve("palubnyListok.xsl"), StandardCharsets.UTF_8);
+
+            // nacitanie pdf suboru
+            Path pdfPath = OUTPUT_DIR.resolve("palubnyListok.pdf");
+            byte[] pdfBytes = Files.readAllBytes(pdfPath);
+            // base64 pre dsigner aj json, kt posielame
+            String pdfBase64 = java.util.Base64.getEncoder().encodeToString(pdfBytes);
+
+            return Map.of(
+                "xml", xml,
+                "xsd", xsd,
+                "xsl", xsl,
+                "pdfBase64", pdfBase64
+            );
+        }));
+
         server.start();
         System.out.println("Palubný lístok beží na http://localhost:" + port);
     }
 
     // ===================== API =====================
 
-    private static HttpHandler api(ApiAction action) {
+    /*private static HttpHandler api(ApiAction action) {
         return exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) {
                 send(exchange, 405, "text/plain; charset=utf-8", "Use POST");
@@ -101,7 +121,27 @@ public class App {
                         Json.write(Map.of("ok", false, "error", message)));
             }
         };
+    }*/
+   private static HttpHandler api(ApiAction action) {
+        return exchange -> {
+            if (!"POST".equals(exchange.getRequestMethod())) {
+                send(exchange, 405, "text/plain; charset=utf-8", "Use POST");
+                return;
+            }
+            try {
+                String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+                Map<String, Object> result = new LinkedHashMap<>(action.execute(parseForm(body)));
+                result.put("ok", true);
+                send(exchange, 200, "application/json; charset=utf-8", Json.write(result));
+            } catch (Throwable e) { // <-- Zmena z Exception na Throwable
+                e.printStackTrace();
+                String message = e.getMessage() != null ? e.getMessage() : e.toString();
+                send(exchange, 200, "application/json; charset=utf-8",
+                        Json.write(Map.of("ok", false, "error", message)));
+            }
+        };
     }
+   
 
     private static Map<String, String> parseForm(String body) {
         Map<String, String> form = new LinkedHashMap<>();

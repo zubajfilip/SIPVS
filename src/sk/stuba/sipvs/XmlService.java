@@ -24,6 +24,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// kvoli pdf outputu
+import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfVersion;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.WriterProperties;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 /**
  * Saves the form as XML, validates it against the XSD and transforms it with the XSL.
  * Element names come from the XSD (palubnyListok.xsd), so they stay in Slovak.
@@ -162,13 +171,36 @@ public class XmlService {
     // ===================== Transform XML to HTML =====================
 
     /** Transforms the saved XML with the XSL and writes the result to the HTML file. */
-    public void transform() throws Exception {
+    /*public void transform() throws Exception {
         requireSavedXml();
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(stylesheetFile.toFile()));
         Files.createDirectories(htmlFile.getParent());
         transformer.transform(new StreamSource(xmlFile.toFile()), new StreamResult(htmlFile.toFile()));
+    }*/
+   public void transform() throws Exception {
+        requireSavedXml();
+
+        // XML -> HTML
+        Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(stylesheetFile.toFile()));
+        Files.createDirectories(htmlFile.getParent());
+        transformer.transform(new StreamSource(xmlFile.toFile()), new StreamResult(htmlFile.toFile()));
+
+        // generovanie pdf, verzia 1.4 lebo vyssie nesli bruh
+        Path pdfFile = htmlFile.getParent().resolve("palubnyListok.pdf");
+
+        WriterProperties writerProperties = new WriterProperties()
+                .setPdfVersion(PdfVersion.PDF_1_4);
+
+        try (InputStream is = Files.newInputStream(htmlFile);
+            OutputStream os = Files.newOutputStream(pdfFile);
+            PdfWriter writer = new PdfWriter(os, writerProperties);
+            PdfDocument pdfDoc = new PdfDocument(writer)) {
+
+            HtmlConverter.convertToPdf(is, pdfDoc);
+        }
     }
+   
 
     public String readXml() throws Exception {
         return Files.readString(xmlFile, StandardCharsets.UTF_8);

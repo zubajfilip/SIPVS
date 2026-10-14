@@ -138,13 +138,29 @@ Výhody elektronického formulára, ktoré aplikácia využíva:
 - **dopočítavanie** – dĺžka letu (`xsd:duration`) sa vypočíta z času odletu a príletu v ich časových pásmach
 - **komfort** – automatické veľké písmená v kódoch, pridávanie/odoberanie pasažierov, tlačidlo *Vyplniť vzorové údaje*
 
+## E-signature essentials
+1. Stiahnutie priečinku Cviko2 zo zdielaného Google drive
+- z podpriečinku Certificate rozkliknúť dtccert.cer a FIITPodpisovatel.pfx -> nainštalovať oboje
+2. Stiahnutie D.Launchera (lokálne na ntb), D.Bridge (v prehliadači)
+- tu nájdete obe https://www.slovensko.sk/sk/na-stiahnutie
+3. Kvôli tomu, že musíme vytvárať aj pdfko som musel použiť aj maven, ak nemáte maven, stiahnite si
+- stiahnite Binary zip archive (*apache-maven-3.10.0-bin.zip*), odtiaľto https://maven.apache.org/download.cgi
+
+**Testovacia stránka**
+https://qes.ditec.sk/upvs/zep/dbridge_js/v1.0/test/dsignerbp.html
+
+
 ### Spustenie
 
 Z koreňa projektu (tam, kde je `palubnyListok.xsd`):
 
+~~javac -encoding UTF-8 -d out src/sk/stuba/sipvs/*.java~~
+~~java -cp out sk.stuba.sipvs.App~~
+
+Kvoli **maven** sa spúšťanie projektu mení na:
 ```bash
-javac -encoding UTF-8 -d out src/sk/stuba/sipvs/*.java
-java -cp out sk.stuba.sipvs.App
+mvn compile
+mvn exec:java -Dexec.mainClass="sk.stuba.sipvs.App"
 ```
 
 Potom otvoriť http://localhost:8080. Voliteľne sa dá zadať iný port: `java -cp out sk.stuba.sipvs.App 9090`.

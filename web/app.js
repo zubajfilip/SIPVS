@@ -370,12 +370,99 @@ $('#transform').addEventListener('click', async () => {
         showMessage('Transformácia zlyhala: ' + escapeHtml(res.error), 'failure');
         return;
     }
+    // make the e-sign button available fof click
+    document.getElementById('sign').disabled = false;
     showMessage(`HTML uložené do <code>${escapeHtml(res.file)}</code> · <a href="${escapeHtml(res.url)}" target="_blank" rel="noopener">otvoriť v novom okne</a>`, 'success');
     const iframe = $('#htmlPreview');
     iframe.src = res.url + '?t=' + Date.now();
     iframe.hidden = false;
     $('#result').scrollIntoView({ behavior: 'smooth' });
 });
+
+// helper funkcia, zachovava kontext objektu
+function dBridgeCall(obj, methodName, ...args) {
+    return new Promise((resolve, reject) => {
+        obj[methodName](...args, {
+            onSuccess: resolve,
+            onError: (e) => {
+                let msg = "Neznáma chyba pri podpisovaní.";
+                if (window.ditec && ditec.utils && ditec.utils.isDitecError(e)) {
+                    if (e.code === ditec.dSigXadesBpJs.ERROR_SIGNING_CANCELLED) {
+                        msg = "ZRUŠENÉ";
+                    } else {
+                        msg = `Chyba ${e.code}: ${e.message}`;
+                    }
+                }
+                reject(new Error(msg));
+            }
+        });
+    });
+}
+
+$('#sign').addEventListener('click', async () => {
+    try {
+        const res = await post('/api/sign');
+        if (!res.ok) {
+            showMessage('Chyba pri sťahovaní podkladov na podpis: ' + escapeHtml(res.error), 'failure');
+            return;
+        }
+
+        showMessage('Inicializujem aplikáciu D.Signer...', '');
+
+        const dSig = ditec.dSigXadesBpJs;
+
+        // posielam nazov metody do funkcie vyssie, nech to je take jednotne a cleaner
+        await dBridgeCall(dSig, 'deploy', null);
+        await dBridgeCall(dSig, 'initialize');
+        await dBridgeCall(dSig, 'setLanguage', dSig.LANG_SK);
+
+        // vlozi do podpisu XML + XSD + XSLT (kontajneris)
+        await dBridgeCall(dSig, 'addXmlObject',
+            "xml-01", "Palubný lístok (XML data cont.)",
+            "http://data.gov.sk/def/container/xmldatacontainer+xml/1.1",
+            // vpodstate zbytocne, iba na verziovanie, nazov formulara
+            res.xml, "XML_Formular", "1.0",
+            //URI format
+            res.xsd, "https://localhost/palubnyListok.xsd",
+            res.xsl, "https://localhost/palubnyListok.xsl", 
+            dSig.XML_MEDIA_DESTINATION_TYPE_DESC_HTML,
+            "http://www.w3.org/1999/XSL/Transform",
+            // vystup HTML, false=format nie je base64
+            "HTML", false, dSig.XML_XDC_NAMESPACE_URI_V1_1
+        );
+
+        await dBridgeCall(dSig, 'addPdfObject',
+            "pdf-01", "Palubný lístok (PDF)",
+            res.pdfBase64, "",
+            "http://data.gov.sk/def/container/pdf",
+            // 2 = dsigner pouzije PdfBpVisualizer
+            2, false
+        );
+
+        showMessage('Čakám na dokončenie podpisu (postupujte podľa pokynov v okne D.Signer)...', '');
+        await dBridgeCall(dSig, 'sign', "SignatureId01", dSig.SHA256, "");
+
+        const asiceBase64 = await dBridgeCall(dSig, 'getSignatureWithASiCEnvelopeBase64');
+
+        const link = document.createElement('a');
+        link.href = 'data:application/vnd.etsi.asic-e+zip;base64,' + asiceBase64;
+        link.download = 'palubnyListok.asice';
+        link.click();
+
+        showMessage('Dokument bol úspešne podpísaný a stiahnutý ako <code>palubnyListok.asice</code>.', 'success');
+
+    } catch (e) {
+        // zachytenie error message do stringu
+        const errorText = (e && e.message) ? e.message : String(e);
+        if (errorText.includes('Chyba 1') || errorText.includes('ZRUŠENÉ') || errorText.includes('zrušené') || errorText.trim() === '1') {
+            showMessage('Podpisovanie bolo zrušené používateľom.', 'failure');
+        } else {
+            showMessage('Podpisovanie zlyhalo: ' + escapeHtml(errorText), 'failure');
+        }
+    }
+    $('#result').scrollIntoView({ behavior: 'smooth' });
+});
+
 
 // ===================== Sample data =====================
 

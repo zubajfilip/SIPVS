@@ -1,0 +1,11 @@
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\html2pdf\5.0.0\html2pdf-5.0.0.jar	3111670:1791905172079
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\forms\8.0.0\forms-8.0.0.jar	228936:1791905173210
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\kernel\8.0.0\kernel-8.0.0.jar	1245120:1791905174101
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\bouncy-castle-connector\8.0.0\bouncy-castle-connector-8.0.0.jar	10933:1791905172473
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\io\8.0.0\io-8.0.0.jar	807997:1791905174541
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\commons\8.0.0\commons-8.0.0.jar	157355:1791905172318
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\layout\8.0.0\layout-8.0.0.jar	548437:1791905173783
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\svg\8.0.0\svg-8.0.0.jar	166079:1791905173121
+classpath:C:\Users\Marek\.m2\repository\com\itextpdf\styled-xml-parser\8.0.0\styled-xml-parser-8.0.0.jar	613652:1791905174079
+classpath:C:\Users\Marek\.m2\repository\org\slf4j\slf4j-api\1.7.36\slf4j-api-1.7.36.jar	41125:1791901371038
+classpath:C:\Users\Marek\.m2\repository\org\slf4j\slf4j-nop\2.0.9\slf4j-nop-2.0.9.jar	4932:1791905539268
